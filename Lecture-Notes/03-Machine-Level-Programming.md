@@ -44,7 +44,7 @@
 
   - **Transfer data** between memory and register
 
-    - **Moving Data:  **
+    - **Moving Data:**
 
       - `movq Source, Dest`
 
@@ -550,9 +550,10 @@ my_switch:
 ### 3.1 Stack Structure (x86-64)
 #### Region of memory managed
 ```bash
-Stack   -> |__| <- stack top [high memory]
------          |__|
------          |__| <- stack pointer: %rsp (stack botttom) [low memory]
+-----
+Stack ---> |__| <- stack top [high memory]
+-----      |__|
+-----      |__| <- stack pointer: %rsp (stack botttom) [low memory]
 Code
 -----
 ```
@@ -561,7 +562,7 @@ Code
 Register ```%rsp``` contains lowest stack address
   - address of “top” element
 
-#### Assembly Operation
+#### Assembly Operations
 - `pushq Src`:
   - fetch operand at src
   - decrement `%rsp` by 8
@@ -573,6 +574,78 @@ Register ```%rsp``` contains lowest stack address
   
 ### 3.2 Calling Convention
 #### Passing Control
+- Use stack to support procedure call and return
+    1. **Procedure call: `call label`**
+        - Push return address on stack
+        - Jump to label
+    2. **Return address:**
+        - Address of the next instruction right after call
+        - Example from disassembly
+    3. **Procedure return: `ret`**
+        - Pop address from stack
+        - Jump to address
 #### Passing Data
+- Procedure Data Flow
+    - Register 
+        - First 6th arguments
+            ```bash
+            %rdi # 1st arg   
+            %rsi # 2nd arg
+            %rdx # 3rd arg      
+            %rcx # 4th arg  
+            %r8  # 5th arg
+            %r9  # 6th arg   
+            ```
+    - Stack
+        - 7th to nth arguments
 #### Managing local data
+Stack allocated in **Frames** (state for single procedure instantiation)
+- **Frame pointer & Stack pointer**
+    ```bash
+                            ______________
+                            previous frame
+    Frame Pointer: %rbp ->  ______________
+                            frame for proc
+    Stack Pointer: %rsp ->  ______________
+    ```
+- **Register Saving Convention**
+    - When procedure `yoo` calls `who`:
+        - `yoo` := caller
+        - `who` := callee
+    - Conventions:
+        - “Caller Saved” (aka “Call-Clobbered”)
+            - Caller saves temporary values in its frame before the call
+        - “Callee Saved” (aka “Call-Preserved”)
+            - Callee saves temporary values in its frame before using
+            - Callee restores them before returning to caller
+
+* x86-64 Linux Register Usage
+    ```bash
+    # Return Value:
+    %rax
+
+    # Arguments :
+    %rdi # 1st arg   
+    %rsi # 2nd arg
+    %rdx # 3rd arg      
+    %rcx # 4th arg  
+    %r8  # 5th arg
+    %r9  # 6th arg   
+
+    # Caller-saved temporaries :
+    %r10 
+    %r11
+    
+    ## Callee-saved tempories : (must save & restore)
+    %rbx
+    %r12
+    %r13
+    %r14 
+    %rbp # (maybe used as frame pointer, can mix & match)
+    
+    # Special
+    %rbp
+    %rsp # special form of callee save (restored to originla value upon exit from procedure)
+
+    
 ### 3.4 Activity
